@@ -79,3 +79,31 @@ insmod: ERROR: could not insert module uartdev_core.ko: Invalid module format
 Lỗi này rất có thể do version magic của uartdev_core.ko không phù hợp với phiên bản Linux kernel đang chạy trên board. Ta có thể kiểm tra bằng cách xem kernel log (dùng lệnh `dmesg`). Nếu như đúng như vậy thì làm theo một trong 2 cách sau:
 - Tìm kiếm và cài đặt lại SDK khác, phù hợp với phiên bản Linux kernel đang chạy trên board, sau đó biên dịch lại uartdev_core.ko.
 - Sửa `UTS_RELEASE` trong tệp tin `$KERNEL_SRC/include/generated/utsrelease.h` thành phiên bản Linux kernel đang chạy trên board, sau đó biên dịch lại uartdev_core.ko. Tuy nhiên, cách này không được khuyến khích.
+
+## 3. Kiểm thử
+
+### 3-1. Kiểm thử tích hợp (IT test)
+
+Mình đã thực hiện IT test trên ZCU102 Evaluation Kit. Việc đánh giá trên các target board khác như Raspberry Pi hay BeagleBoard cũng tương tự.
+
+Bước 1: Tải các driver module cần thiết xuống board.
+
+```bash
+# [Host PC (WSL2)]
+cd serial/
+scp *.ko zcu102:/tmp/
+```
+
+Bước 2: Tải chương trình kiểm thử xuống board.
+
+```bash
+# [Host PC (WSL2)]
+cd test/ && make && scp build/bin/test_counter_vn29a80 zcu102:/tmp
+```
+
+Bước 3: Chạy chương trình kiểm thử trên board.
+
+```bash
+# [Target board (ZCU102)]
+/tmp/test_counter_vn29a80
+```
