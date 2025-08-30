@@ -8,6 +8,28 @@
 #define __UARTDEV_CORE_H_
 
 #include <linux/device.h>
+#include <linux/fs.h>
+#include <linux/sysfs.h>
+#include <linux/cdev.h>
+
+/**************************** class uif *******************************/
+struct uif {
+	/* giao diện char device file: sử dụng bởi userspace services/apps */
+
+	u32 id;
+	struct cdev cdev;
+	struct device *dev;
+	struct file_operations *cdev_fops; /* được cung cấp bởi UART device driver */
+	atomic_t in_transaction;
+
+	/* giao diện sysfs: sử dụng bởi kỹ sư phát triển device driver */
+
+	struct attribute_group *attrs_group; /* được cung cấp bởi UART device driver */
+};
+
+s32 uif_register(struct uif *this, struct device *dev);
+void uif_unregister(struct uif *this);
+
 
 /**************************** class drv *******************************/
 

@@ -108,4 +108,4 @@ module_exit(drv_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("vietnam-engineer");
 MODULE_DESCRIPTION("core module for UART device driver");
-MODULE_VERSION("0.1.0");
+MODULE_VERSION("0.2.0");

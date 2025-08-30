@@ -3,4 +3,4 @@ ccflags-y = -Wall -I$(src)/include $(CFLAGS_DBG)
 # uartdev_core chứa các APIs chung, được dùng trong nhiều UART device driver.
 
 obj-m	+= uartdev_core.o
-uartdev_core-objs := src/drv.o
+uartdev_core-objs := src/drv.o src/uif.o
