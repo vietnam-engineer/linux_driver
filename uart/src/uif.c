@@ -81,6 +81,7 @@ err_cdev_add:
 err_alloc_minor:
 	return err;
 }
+EXPORT_SYMBOL(uif_register);
 
 /**
  * @brief API này cho phép một UART device driver hủy đăng ký
@@ -97,3 +98,4 @@ void uif_unregister(struct uif *this)
 	cdev_del(&this->cdev);
 	drv_remove_minor(this->id);
 }
+EXPORT_SYMBOL(uif_unregister);

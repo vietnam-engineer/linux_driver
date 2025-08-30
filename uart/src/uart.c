@@ -12,6 +12,7 @@ u32 uart_get_send_timeout(struct uart *this)
 {
 	return jiffies_to_msecs(this->send_timeout);
 }
+EXPORT_SYMBOL(uart_get_send_timeout);
 
 s32 uart_set_send_timeout(struct uart *this, u32 ms)
 {
@@ -24,11 +25,13 @@ s32 uart_set_send_timeout(struct uart *this, u32 ms)
 	this->send_timeout = ticks;
 	return 0;
 }
+EXPORT_SYMBOL(uart_set_send_timeout);
 
 u32 uart_get_recv_timeout(struct uart *this)
 {
 	return jiffies_to_msecs(this->recv_timeout);
 }
+EXPORT_SYMBOL(uart_get_recv_timeout);
 
 s32 uart_set_recv_timeout(struct uart *this, u32 ms)
 {
@@ -41,6 +44,7 @@ s32 uart_set_recv_timeout(struct uart *this, u32 ms)
 	this->recv_timeout = ticks;
 	return 0;
 }
+EXPORT_SYMBOL(uart_set_recv_timeout);
 
 /**
  * @brief Lấy các UART port settings từ device tree
@@ -102,6 +106,7 @@ s32 uart_register(struct uart *this, struct device *dev)
 
 	return 0;
 }
+EXPORT_SYMBOL(uart_register);
 
 /**
  * @brief API này cho phép một UART device driver hủy đăng ký
@@ -115,3 +120,4 @@ s32 uart_register(struct uart *this, struct device *dev)
 void uart_unregister(struct uart *this)
 {
 }
+EXPORT_SYMBOL(uart_unregister);
