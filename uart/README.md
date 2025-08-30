@@ -69,6 +69,7 @@ Bước 2: Tải nạp các driver module vào trong kernel space.
 # [Target board (ZCU102)]
 cd /tmp
 insmod uartdev_core.ko
+insmod counter_vn29a80.ko
 ```
 
 Bạn có thể gặp lỗi sau:

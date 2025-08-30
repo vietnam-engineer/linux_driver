@@ -4,3 +4,7 @@ ccflags-y = -Wall -I$(src)/include $(CFLAGS_DBG)
 
 obj-m	+= uartdev_core.o
 uartdev_core-objs := src/drv.o src/uif.o src/uart.o
+
+# counter_vn29a80: UART device driver cho bộ đếm vn29a80
+obj-m	+= counter_vn29a80.o
+counter_vn29a80-objs := src/vn29a80_drv.o
