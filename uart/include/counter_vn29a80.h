@@ -19,4 +19,16 @@ struct vn29a80_cmd {
 	__u32 param_cnt;
 };
 
+/* Các định nghĩa cho dữ liệu */
+
+struct vn29a80_data {
+	/* dữ liệu được lấy từ thiết bị */
+
+	__u32 counter;
+
+	/* dữ liệu được thêm bởi device driver */
+
+	__u32 res_count;
+};
+
 #endif /* __COUNTER_VN29A80_H_ */
