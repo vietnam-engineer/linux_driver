@@ -7,4 +7,4 @@ uartdev_core-objs := src/drv.o src/uif.o src/uart.o
 
 # counter_vn29a80: UART device driver cho bộ đếm vn29a80
 obj-m	+= counter_vn29a80.o
-counter_vn29a80-objs := src/vn29a80_drv.o
+counter_vn29a80-objs := src/vn29a80_drv.o src/vn29a80_req.o
