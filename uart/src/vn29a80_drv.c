@@ -49,6 +49,7 @@ static const struct of_device_id vn29a80_of_match[] = {
 	{ .compatible = "hcm,vn29a80" },
 	{},
 };
+MODULE_DEVICE_TABLE(of, vn29a80_of_match);
 
 /* Làm đơn đăng ký xin được điều khiển các thiết bị */
 static struct serdev_device_driver vn29a80_driver = {
@@ -66,4 +67,4 @@ module_serdev_device_driver(vn29a80_driver);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("vietnam-engineer");
 MODULE_DESCRIPTION("UART device driver for a circular counter");
-MODULE_VERSION("0.0.0");
+MODULE_VERSION("0.0.1");
