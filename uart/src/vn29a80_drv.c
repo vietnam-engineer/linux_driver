@@ -38,10 +38,16 @@ static int vn29a80_drv_setup(struct serdev_device *serdev)
 	if (err)
 		goto err_res_setup;
 
+	err = vn29a80_uart_setup(&drv->uart, dev);
+	if (err)
+		goto err_uart_setup;
+
 	dev_info(dev, "%s finished\n", __func__);
 
 	return 0;
 
+err_uart_setup:
+	vn29a80_res_cleanup(&drv->res);
 err_res_setup:
 	vn29a80_req_cleanup(&drv->req);
 err_req_setup:
@@ -56,6 +62,7 @@ static void vn29a80_drv_cleanup(struct serdev_device *serdev)
 
 	dev_info(dev, "%s start\n", __func__);
 
+	vn29a80_uart_cleanup(&drv->uart);
 	vn29a80_res_cleanup(&drv->res);
 	vn29a80_req_cleanup(&drv->req);
 
@@ -85,4 +92,4 @@ module_serdev_device_driver(vn29a80_driver);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("vietnam-engineer");
 MODULE_DESCRIPTION("UART device driver for a circular counter");
-MODULE_VERSION("0.2.0");
+MODULE_VERSION("0.3.0");
