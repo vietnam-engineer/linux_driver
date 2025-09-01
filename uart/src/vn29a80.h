@@ -46,6 +46,7 @@ void vn29a80_res_cleanup(vn29a80_res *this);
 /**************************** class vn29a80_drv ********************************/
 typedef struct {
 	vn29a80_req req;
+	vn29a80_res res;
 } vn29a80_drv;
 
 #endif /* __VN29A80_H_ */
