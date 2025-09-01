@@ -58,6 +58,7 @@ bool vn29a80_res_parse_raw(vn29a80_res *this)
 	u32 param_size; /* kích thước phần tham số của bản tin */
 	u32 footer_idx; /* vị trí của phần kết thúc trong this->msg.buf */
 	u8 bytes[4]; /* lưu các giá trị tạm thời khi phân tích dữ liệu */
+	u64 now_ns = ktime_get(); /* hiện tại, tính theo CLOCK_MONOTONIC */
 
 	/* Tìm vị trí của phần đầu đề  */
 	for (hdr_idx = 0; this->msg.len >= hdr_idx + RES_MIN_SIZE; ++hdr_idx) {
@@ -102,6 +103,10 @@ bool vn29a80_res_parse_raw(vn29a80_res *this)
 		this->data.counter = get_unaligned_be32(bytes);
 		dev_info(this->dev, "%s counter = %u\n", __func__, this->data.counter);
 	}
+
+	/* Sinh các dữ liệu của driver */
+	this->data.sys_uptime_ns = now_ns;
+	this->data.unix_time_ns = ktime_mono_to_real(now_ns);
 
 	return true;
 }

@@ -28,6 +28,8 @@ struct vn29a80_data {
 
 	/* dữ liệu được thêm bởi device driver */
 
+	__u64 unix_time_ns;
+	__u64 sys_uptime_ns;
 	__u32 res_count;
 };
 
