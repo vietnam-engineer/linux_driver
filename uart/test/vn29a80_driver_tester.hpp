@@ -17,8 +17,23 @@ class Vn29a80DrvTester : public ::testing::Test {
 	void expect_cmd_successful(const char *cmd);
 	void expect_cmd_failed(const char *cmd);
 
+	void test_exist_file(const std::string &file_name);
+	void test_read_only_file(const std::string &file_name);
+	void test_read_write_file(const std::string &file_name);
+
     protected:
 	static inline const std::string SYSFS_UARTDEV{ "/sys/class/uartdev" };
+	static inline const std::string SYSFS_REQ_RAW{
+		"/sys/class/uartdev/counter1/req_raw"
+	};
+	static inline const std::string SYSFS_RES_RAW{
+		"/sys/class/uartdev/counter1/res_raw"
+	};
+	static inline const std::string SYSFS_DATA{ "/sys/class/uartdev/counter1/data" };
+	static inline const std::string SYSFS_TIMEOUT{
+		"/sys/class/uartdev/counter1/timeout"
+	};
+	static inline const std::string DEVICE_FILE{ "/dev/counter1" };
 };
 
 #endif
