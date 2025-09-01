@@ -46,6 +46,147 @@ static s32 vn29a80_uif_create_and_send_cmd(vn29a80_uif *this, struct vn29a80_cmd
 	return err;
 }
 
+/**
+ * @brief Ghi trực tiếp một chuỗi ký tự vào vn29a80
+ * @param dev Thông tin về thiết bị liên kết với `req_raw` attribute
+ * @param attr Thông tin về sysfs attribute, bao gồm tên và quyền truy cập.
+ * @param buf bản tin yêu cầu được viết vào sysfs file
+ * @param count kích thước của bản tin (tính theo bytes)
+ * @return Số byte đã gửi tới vn29a80 nếu thành công. Nếu có lỗi, trả về một số âm.
+ * @note Thread gọi hàm này sẽ bị tạm dừng hoạt động (đi ngủ) trong lúc chờ phản hồi.
+ * @note Hàm này sẽ đảm bảo chắc chắc không có yêu cầu nào được gửi đi khi giao dịch
+ * hiện tại vẫn chưa hoàn tất. -EBUSY sẽ được trả về nếu hàm này cũng đang được gọi
+ * trong một thread khác.
+ */
+static ssize_t req_raw_store(struct device *dev, struct device_attribute *attr,
+			     const char *buf, size_t count)
+{
+	vn29a80_uif *uif = dev_get_drvdata(dev);
+	vn29a80_drv *drv = container_of(uif, vn29a80_drv, uif);
+	vn29a80_uart *uart = &drv->uart;
+	vn29a80_res *res = &drv->res;
+	s32 err = 0;
+
+	if (atomic_cmpxchg(&uif->in_transaction, 0, 1) != 0) {
+		dev_err(uif->dev, "%s busy\n", __func__);
+		return -EBUSY;
+	}
+
+	vn29a80_res_clear_raw(res);
+	err = vn29a80_uart_send_req(uart, buf, count);
+
+	atomic_set(&uif->in_transaction, 0);
+
+	if (err) {
+		return err;
+	}
+
+	return count;
+}
+static ssize_t req_raw_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	vn29a80_uif *uif = dev_get_drvdata(dev);
+	vn29a80_drv *drv = container_of(uif, vn29a80_drv, uif);
+	vn29a80_req *req = &drv->req;
+	struct vn29a80_msg raw = vn29a80_req_get(req);
+	s32 offset, i;
+
+	for (i = 0, offset = 0; i < raw.len; ++i) {
+		offset += snprintf(buf + offset, PAGE_SIZE - offset, "%c", raw.buf[i]);
+	}
+
+	return offset;
+}
+static DEVICE_ATTR_RW(req_raw);
+
+static ssize_t res_raw_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	vn29a80_uif *uif = dev_get_drvdata(dev);
+	vn29a80_drv *drv = container_of(uif, vn29a80_drv, uif);
+	vn29a80_res *res = &drv->res;
+	struct vn29a80_msg raw = vn29a80_res_get_raw(res);
+	s32 offset, i;
+
+	for (i = 0, offset = 0; i < raw.len; ++i) {
+		offset += snprintf(buf + offset, PAGE_SIZE - offset, "%c", raw.buf[i]);
+	}
+
+	return offset;
+}
+static DEVICE_ATTR_RO(res_raw);
+
+static ssize_t data_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	vn29a80_uif *uif = dev_get_drvdata(dev);
+	vn29a80_drv *drv = container_of(uif, vn29a80_drv, uif);
+	vn29a80_res *res = &drv->res;
+	struct vn29a80_data data = vn29a80_res_get_data(res);
+	s32 offset = 0;
+
+	offset +=
+		snprintf(buf + offset, PAGE_SIZE - offset, "counter: %u\n", data.counter);
+	offset += snprintf(buf + offset, PAGE_SIZE - offset,
+			   "unix_time_ns: %llu, sys_uptime_ns: %llu\n", data.unix_time_ns,
+			   data.sys_uptime_ns);
+	offset += snprintf(buf + offset, PAGE_SIZE - offset, "res_count: %u\n",
+			   data.res_count);
+	return offset;
+}
+static DEVICE_ATTR_RO(data);
+
+static ssize_t timeout_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	vn29a80_uif *uif = dev_get_drvdata(dev);
+	vn29a80_drv *drv = container_of(uif, vn29a80_drv, uif);
+	vn29a80_uart *uart = &drv->uart;
+	s32 offset = 0;
+
+	offset += snprintf(buf + offset, PAGE_SIZE - offset, "sending timeout: %u ms\n",
+			   uart_get_send_timeout(uart));
+	offset += snprintf(buf + offset, PAGE_SIZE - offset, "response timeout: %u ms\n",
+			   uart_get_recv_timeout(uart));
+	return offset;
+}
+
+static ssize_t timeout_store(struct device *dev, struct device_attribute *attr,
+			     const char *buf, size_t count)
+{
+	vn29a80_uif *uif = dev_get_drvdata(dev);
+	vn29a80_drv *drv = container_of(uif, vn29a80_drv, uif);
+	vn29a80_uart *uart = &drv->uart;
+	u32 send_timeout, recv_timeout;
+	s32 err = 0;
+
+	err = sscanf(buf, "%u:%u", &send_timeout, &recv_timeout);
+	if (err != 2) {
+		dev_err(dev, "%s get params, error %d\n", __func__, err);
+		return -ENOEXEC;
+	}
+
+	err = uart_set_send_timeout(uart, send_timeout);
+	if (err)
+		return err;
+
+	err = uart_set_recv_timeout(uart, recv_timeout);
+	if (err)
+		return err;
+
+	return count;
+}
+static DEVICE_ATTR_RW(timeout);
+
+static struct attribute *vn29a80_uif_attrs[] = {
+	&dev_attr_req_raw.attr, /* /sys/class/uartdev/counter1/req_raw */
+	&dev_attr_res_raw.attr, /* /sys/class/uartdev/counter1/res_raw */
+	&dev_attr_data.attr, /* /sys/class/uartdev/counter1/data */
+	&dev_attr_timeout.attr, /* /sys/class/uartdev/counter1/timeout */
+	NULL,
+};
+
+static struct attribute_group vn29a80_uif_attrs_group = {
+	.attrs = vn29a80_uif_attrs,
+};
+
 static s32 vn29a80_uif_cdev_open(struct inode *inode, struct file *file)
 {
 	vn29a80_uif *uif = container_of(inode->i_cdev, vn29a80_uif, cdev);
@@ -182,6 +323,7 @@ static struct file_operations vn29a80_uif_cdev_fops = {
 s32 vn29a80_uif_setup(vn29a80_uif *this, struct device *dev)
 {
 	this->cdev_fops = &vn29a80_uif_cdev_fops;
+	this->attrs_group = &vn29a80_uif_attrs_group;
 	return uif_register(this, dev);
 }
 
