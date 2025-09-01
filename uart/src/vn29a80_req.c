@@ -30,7 +30,9 @@
 struct vn29a80_msg vn29a80_req_get(vn29a80_req *this)
 {
 	struct vn29a80_msg msg;
+	mutex_lock(&this->lock);
 	msg = this->msg;
+	mutex_unlock(&this->lock);
 	return msg;
 }
 
@@ -51,6 +53,8 @@ s32 vn29a80_req_create(vn29a80_req *this, const struct vn29a80_cmd *cmd)
 		return -EINVAL;
 	}
 
+	mutex_lock(&this->lock);
+
 	/* Khởi tạo bộ đệm */
 	this->msg.len = 0;
 
@@ -61,6 +65,7 @@ s32 vn29a80_req_create(vn29a80_req *this, const struct vn29a80_cmd *cmd)
 		this->msg.len += REQ_HEADER_SIZE;
 	} else {
 		dev_err(this->dev, "%s failed to copy SOF: ret = %d\n", __func__, ret);
+		mutex_unlock(&this->lock);
 		return -EINVAL;
 	}
 
@@ -92,11 +97,13 @@ s32 vn29a80_req_create(vn29a80_req *this, const struct vn29a80_cmd *cmd)
 		} else {
 			dev_err(this->dev, "%s failed to copy param: ret = %d\n",
 				__func__, ret);
+			mutex_unlock(&this->lock);
 			return -EINVAL;
 		}
 		break;
 	default:
 		dev_err(this->dev, "%s invalid ID %u\n", __func__, cmd->id);
+		mutex_unlock(&this->lock);
 		return -EINVAL;
 	}
 
@@ -112,10 +119,14 @@ s32 vn29a80_req_create(vn29a80_req *this, const struct vn29a80_cmd *cmd)
 		this->msg.len += ret;
 	} else {
 		dev_err(this->dev, "%s failed to copy EOF: ret = %d\n", __func__, ret);
+		mutex_unlock(&this->lock);
 		return -EINVAL;
 	}
 
 	dev_info(this->dev, "%s %s (%u bytes)\n", __func__, this->msg.buf, this->msg.len);
+
+	mutex_unlock(&this->lock);
+
 	return 0;
 }
 
@@ -129,6 +140,7 @@ s32 vn29a80_req_setup(vn29a80_req *this, struct device *dev)
 {
 	this->msg.len = 0;
 	this->dev = dev;
+	mutex_init(&this->lock);
 
 	return 0;
 }
@@ -139,4 +151,5 @@ s32 vn29a80_req_setup(vn29a80_req *this, struct device *dev)
  */
 void vn29a80_req_cleanup(vn29a80_req *this)
 {
+	mutex_destroy(&this->lock);
 }

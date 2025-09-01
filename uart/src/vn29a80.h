@@ -33,6 +33,7 @@ struct vn29a80_msg {
 };
 
 typedef struct {
+	struct mutex lock;
 	struct vn29a80_msg msg;
 	struct device *dev;
 } vn29a80_req;
@@ -44,6 +45,7 @@ void vn29a80_req_cleanup(vn29a80_req *this);
 
 /**************************** class vn29a80_res ********************************/
 typedef struct {
+	struct mutex lock; /* bảo về dữ liệu khỏi đa truy cập */
 	struct vn29a80_msg msg; /* bản tin phản hồi trước khi phân tích */
 	struct vn29a80_data data; /* dữ liệu thu thập được sau khi phần tích */
 	struct device *dev;

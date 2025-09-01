@@ -32,14 +32,18 @@
 
 void vn29a80_res_clear_raw(vn29a80_res *this)
 {
+	mutex_lock(&this->lock);
 	this->msg.len = 0;
+	mutex_unlock(&this->lock);
 }
 
 size_t vn29a80_res_set_raw(vn29a80_res *this, const u8 *ser_buf, size_t sz)
 {
 	size_t len = min_t(size_t, sz, VN29A80_MSG_LEN - this->msg.len);
+	mutex_lock(&this->lock);
 	memcpy(this->msg.buf + this->msg.len, ser_buf, len);
 	this->msg.len += len;
+	mutex_unlock(&this->lock);
 	return len;
 }
 
@@ -60,6 +64,8 @@ bool vn29a80_res_parse_raw(vn29a80_res *this)
 	u8 bytes[4]; /* lưu các giá trị tạm thời khi phân tích dữ liệu */
 	u64 now_ns = ktime_get(); /* hiện tại, tính theo CLOCK_MONOTONIC */
 
+	mutex_lock(&this->lock);
+
 	/* Tìm vị trí của phần đầu đề  */
 	for (hdr_idx = 0; this->msg.len >= hdr_idx + RES_MIN_SIZE; ++hdr_idx) {
 		if (!strncmp(this->msg.buf + hdr_idx, RES_START_FRAME, RES_HEADER_SIZE)) {
@@ -68,6 +74,7 @@ bool vn29a80_res_parse_raw(vn29a80_res *this)
 	}
 
 	if (this->msg.len < hdr_idx + RES_MIN_SIZE) {
+		mutex_unlock(&this->lock);
 		return false;
 	}
 
@@ -76,6 +83,7 @@ bool vn29a80_res_parse_raw(vn29a80_res *this)
 	if (err) {
 		dev_err(this->dev, "%s can't convert to binary\n", __func__);
 		this->msg.len = 0;
+		mutex_unlock(&this->lock);
 		return false;
 	} else if (msg_id == CMD_ID_GET_COUNTER) {
 		param_size = RES_PARAM_SIZE_GET_COUNT;
@@ -84,6 +92,7 @@ bool vn29a80_res_parse_raw(vn29a80_res *this)
 	}
 
 	if (this->msg.len < hdr_idx + RES_MIN_SIZE + param_size) {
+		mutex_unlock(&this->lock);
 		return false;
 	}
 
@@ -92,6 +101,7 @@ bool vn29a80_res_parse_raw(vn29a80_res *this)
 	if (strncmp(this->msg.buf + footer_idx, RES_END_FRAME, RES_FOOTER_SIZE)) {
 		dev_err(this->dev, "%s found unexpected EOF\n", __func__);
 		this->msg.len = 0;
+		mutex_unlock(&this->lock);
 		return false;
 	}
 
@@ -108,19 +118,25 @@ bool vn29a80_res_parse_raw(vn29a80_res *this)
 	this->data.sys_uptime_ns = now_ns;
 	this->data.unix_time_ns = ktime_mono_to_real(now_ns);
 
+	mutex_unlock(&this->lock);
+
 	return true;
 }
 
 struct vn29a80_msg vn29a80_res_get_raw(vn29a80_res *this)
 {
 	struct vn29a80_msg raw = {};
+	mutex_lock(&this->lock);
 	raw = this->msg;
+	mutex_unlock(&this->lock);
 	return raw;
 }
 struct vn29a80_data vn29a80_res_get_data(vn29a80_res *this)
 {
 	struct vn29a80_data data = {};
+	mutex_lock(&this->lock);
 	data = this->data;
+	mutex_unlock(&this->lock);
 	return data;
 }
 
@@ -134,6 +150,7 @@ s32 vn29a80_res_setup(vn29a80_res *this, struct device *dev)
 {
 	this->msg.len = 0;
 	this->dev = dev;
+	mutex_init(&this->lock);
 
 	return 0;
 }
@@ -144,4 +161,5 @@ s32 vn29a80_res_setup(vn29a80_res *this, struct device *dev)
  */
 void vn29a80_res_cleanup(vn29a80_res *this)
 {
+	mutex_destroy(&this->lock);
 }
