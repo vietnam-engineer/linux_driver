@@ -7,6 +7,15 @@
 #ifndef __COUNTER_VN29A80_H_
 #define __COUNTER_VN29A80_H_
 
+/* Định nghĩa các IOCTL của character device file */
+
+#define IOCTL_TYPE_COUNTER 0x84
+
+#define DEV_SET_SEND_TIMEOUT _IOW(IOCTL_TYPE_COUNTER, 0x02, __u32)
+#define DEV_GET_SEND_TIMEOUT _IOR(IOCTL_TYPE_COUNTER, 0x03, __u32 *)
+#define DEV_SET_RECV_TIMEOUT _IOW(IOCTL_TYPE_COUNTER, 0x04, __u32)
+#define DEV_GET_RECV_TIMEOUT _IOR(IOCTL_TYPE_COUNTER, 0x05, __u32 *)
+
 /* Các định nghĩa cho lệnh */
 
 enum cmd_id {
