@@ -10,6 +10,12 @@
 #include "uartdev_core.h"
 #include "counter_vn29a80.h"
 
+/**************************** class ewc31ng_uif ********************************/
+
+typedef struct uif vn29a80_uif; /* các thuộc tính giống lớp cha */
+s32 vn29a80_uif_setup(vn29a80_uif *this, struct device *dev);
+void vn29a80_uif_cleanup(vn29a80_uif *this);
+
 /************************* class uart ******************************/
 
 typedef struct uart vn29a80_uart; /* các thuộc tính giống lớp cha */
@@ -53,6 +59,7 @@ void vn29a80_res_cleanup(vn29a80_res *this);
 
 /**************************** class vn29a80_drv ********************************/
 typedef struct {
+	vn29a80_uif uif;
 	vn29a80_uart uart;
 	vn29a80_req req;
 	vn29a80_res res;
