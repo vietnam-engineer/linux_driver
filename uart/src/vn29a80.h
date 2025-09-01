@@ -10,6 +10,14 @@
 #include "uartdev_core.h"
 #include "counter_vn29a80.h"
 
+/************************* class uart ******************************/
+
+typedef struct uart vn29a80_uart; /* các thuộc tính giống lớp cha */
+s32 vn29a80_uart_send_req(vn29a80_uart *this, const u8 *buf, u32 len);
+
+s32 vn29a80_uart_setup(vn29a80_uart *this, struct device *dev);
+void vn29a80_uart_cleanup(vn29a80_uart *this);
+
 /**************************** class vn29a80_req ********************************/
 #define VN29A80_MSG_LEN 64
 
@@ -45,6 +53,7 @@ void vn29a80_res_cleanup(vn29a80_res *this);
 
 /**************************** class vn29a80_drv ********************************/
 typedef struct {
+	vn29a80_uart uart;
 	vn29a80_req req;
 	vn29a80_res res;
 } vn29a80_drv;
